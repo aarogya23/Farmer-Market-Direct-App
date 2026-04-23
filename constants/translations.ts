@@ -31,6 +31,19 @@ type TranslationShape = {
     phonePlaceholder: string;
     signIn: string;
   };
+  dashboard: {
+    title: string;
+    subtitle: string;
+    todaySales: string;
+    newOrders: string;
+    activeListings: string;
+    quickActions: string;
+    recentActivity: string;
+    addProduct: string;
+    manageOrders: string;
+    weatherCenter: string;
+    priceWatch: string;
+  };
   market: {
     eyebrow: string;
     title: string;
@@ -55,9 +68,22 @@ type TranslationShape = {
     cropSuggestions: string;
     marketSignals: string;
   };
+  profile: {
+    title: string;
+    subtitle: string;
+    farmerName: string;
+    role: string;
+    location: string;
+    phone: string;
+    language: string;
+    support: string;
+    logout: string;
+  };
   tabs: {
+    dashboard: string;
     market: string;
     insights: string;
+    profile: string;
   };
 };
 
@@ -94,6 +120,19 @@ export const translations: Record<AppLanguage, TranslationShape> = {
       phonePlaceholder: 'Enter phone number',
       signIn: 'Sign In',
     },
+    dashboard: {
+      title: 'Dashboard',
+      subtitle: 'Track sales, orders, and farm activity from one place.',
+      todaySales: 'Today sales',
+      newOrders: 'New orders',
+      activeListings: 'Active listings',
+      quickActions: 'Quick actions',
+      recentActivity: 'Recent activity',
+      addProduct: 'Add product',
+      manageOrders: 'Manage orders',
+      weatherCenter: 'Weather center',
+      priceWatch: 'Price watch',
+    },
     market: {
       eyebrow: 'Farmer Market Direct',
       title: 'Fair prices for farmers. Fresh deals for buyers.',
@@ -121,9 +160,22 @@ export const translations: Record<AppLanguage, TranslationShape> = {
       cropSuggestions: 'Crop suggestions',
       marketSignals: 'Market price signals',
     },
+    profile: {
+      title: 'Profile',
+      subtitle: 'Manage your farmer account, contact details, and preferences.',
+      farmerName: 'Farmer name',
+      role: 'Role',
+      location: 'Location',
+      phone: 'Phone',
+      language: 'Language',
+      support: 'Support',
+      logout: 'Log out',
+    },
     tabs: {
+      dashboard: 'Dashboard',
       market: 'Market',
       insights: 'Insights',
+      profile: 'Profile',
     },
   },
   ne: {
@@ -158,6 +210,19 @@ export const translations: Record<AppLanguage, TranslationShape> = {
       phonePlaceholder: 'फोन नम्बर लेख्नुहोस्',
       signIn: 'साइन इन',
     },
+    dashboard: {
+      title: 'ड्यासबोर्ड',
+      subtitle: 'एकै ठाउँबाट बिक्री, अर्डर र खेती गतिविधि हेर्नुहोस्।',
+      todaySales: 'आजको बिक्री',
+      newOrders: 'नयाँ अर्डर',
+      activeListings: 'सक्रिय सूची',
+      quickActions: 'छिटो कार्य',
+      recentActivity: 'हालिको गतिविधि',
+      addProduct: 'उत्पादन थप्नुहोस्',
+      manageOrders: 'अर्डर व्यवस्थापन',
+      weatherCenter: 'मौसम केन्द्र',
+      priceWatch: 'मूल्य हेर्नुहोस्',
+    },
     market: {
       eyebrow: 'किसान मार्केट डाइरेक्ट',
       title: 'किसानका लागि उचित मूल्य। ग्राहकका लागि ताजा सौदा।',
@@ -185,9 +250,22 @@ export const translations: Record<AppLanguage, TranslationShape> = {
       cropSuggestions: 'बाली सुझाव',
       marketSignals: 'बजार मूल्य संकेत',
     },
+    profile: {
+      title: 'प्रोफाइल',
+      subtitle: 'किसान खाता, सम्पर्क विवरण र रुचि व्यवस्थापन गर्नुहोस्।',
+      farmerName: 'किसानको नाम',
+      role: 'भूमिका',
+      location: 'ठेगाना',
+      phone: 'फोन',
+      language: 'भाषा',
+      support: 'सहयोग',
+      logout: 'लग आउट',
+    },
     tabs: {
+      dashboard: 'ड्यासबोर्ड',
       market: 'बजार',
       insights: 'जानकारी',
+      profile: 'प्रोफाइल',
     },
   },
 };
