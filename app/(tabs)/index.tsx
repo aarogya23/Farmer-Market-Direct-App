@@ -1,20 +1,137 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { buyerHighlights, impactMetrics, products } from '@/constants/market-data';
+import { useLanguage } from '@/components/language-context';
+import * as marketData from '@/constants/market-data';
+
+const fallbackHighlights = {
+  en: [
+    'Direct ordering with transparent farmer-set prices',
+    'Side-by-side market comparison before checkout',
+    'Pickup, delivery, and bulk request options',
+  ],
+  ne: [
+    'किसानले तय गरेको मूल्यमा प्रत्यक्ष अर्डर',
+    'किन्नु अघि बजारसँग साइड-बाइ-साइड तुलना',
+    'पिकअप, डेलिभरी र थोक अनुरोधका विकल्प',
+  ],
+};
+
+const fallbackMetrics = {
+  en: [
+    { label: 'Active farmers', value: '124' },
+    { label: 'Buyer savings', value: '18%' },
+    { label: 'Avg farmer uplift', value: '+26%' },
+  ],
+  ne: [
+    { label: 'सक्रिय किसान', value: '124' },
+    { label: 'ग्राहक बचत', value: '18%' },
+    { label: 'किसान आम्दानी वृद्धि', value: '+26%' },
+  ],
+};
+
+const fallbackProducts = {
+  en: [
+    {
+      id: 'prod-1',
+      name: 'Tomatoes',
+      farmer: 'Sita Organic Farm',
+      location: 'Bharatpur',
+      unit: 'crate',
+      price: 780,
+      marketPrice: 930,
+      stock: '42 crates ready',
+      pickup: 'Next morning delivery',
+      tags: ['Pesticide-free', 'Best seller'],
+    },
+    {
+      id: 'prod-2',
+      name: 'Fresh Spinach',
+      farmer: 'Green Valley Co-op',
+      location: 'Pokhara',
+      unit: 'bundle',
+      price: 55,
+      marketPrice: 70,
+      stock: '160 bundles',
+      pickup: 'Same-day pickup',
+      tags: ['Leafy greens', 'Restaurant favorite'],
+    },
+    {
+      id: 'prod-3',
+      name: 'Red Rice',
+      farmer: 'Hillside Harvest',
+      location: 'Lamjung',
+      unit: '25 kg bag',
+      price: 1950,
+      marketPrice: 2280,
+      stock: '18 bags',
+      pickup: '2-day transport',
+      tags: ['Premium grain', 'High demand'],
+    },
+  ],
+  ne: [
+    {
+      id: 'prod-1',
+      name: 'गोलभेंडा',
+      farmer: 'सीता अर्गानिक फार्म',
+      location: 'भरतपुर',
+      unit: 'क्रेट',
+      price: 780,
+      marketPrice: 930,
+      stock: '४२ क्रेट तयार',
+      pickup: 'भोलि बिहान डेलिभरी',
+      tags: ['बिषादीरहित', 'धेरै बिक्री हुने'],
+    },
+    {
+      id: 'prod-2',
+      name: 'ताजा पालुंगो',
+      farmer: 'ग्रीन भ्याली सहकारी',
+      location: 'पोखरा',
+      unit: 'गाँठा',
+      price: 55,
+      marketPrice: 70,
+      stock: '१६० गाँठा',
+      pickup: 'आजै पिकअप',
+      tags: ['पातेदार तरकारी', 'रेस्टुरेन्टको रोजाइ'],
+    },
+    {
+      id: 'prod-3',
+      name: 'रातो चामल',
+      farmer: 'हिलसाइड हार्भेस्ट',
+      location: 'लमजुङ',
+      unit: '२५ केजी बोर',
+      price: 1950,
+      marketPrice: 2280,
+      stock: '१८ बोर',
+      pickup: '२ दिनमा ढुवानी',
+      tags: ['प्रिमियम अन्न', 'उच्च माग'],
+    },
+  ],
+};
 
 export default function MarketScreen() {
+  const { language, t } = useLanguage();
+  const buyerHighlights =
+    typeof marketData.getBuyerHighlights === 'function'
+      ? marketData.getBuyerHighlights(language)
+      : fallbackHighlights[language];
+  const impactMetrics =
+    typeof marketData.getImpactMetrics === 'function'
+      ? marketData.getImpactMetrics(language)
+      : fallbackMetrics[language];
+  const products =
+    typeof marketData.getProducts === 'function'
+      ? marketData.getProducts(language)
+      : fallbackProducts[language];
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <View style={styles.heroGlowOne} />
         <View style={styles.heroGlowTwo} />
-        <Text style={styles.eyebrow}>Farmer Market Direct</Text>
-        <Text style={styles.heroTitle}>Fair prices for farmers. Fresh deals for buyers.</Text>
-        <Text style={styles.heroText}>
-          A direct marketplace where farmers list produce, buyers order without middlemen, and
-          everyone sees a clear market price comparison before purchase.
-        </Text>
+        <Text style={styles.eyebrow}>{t.market.eyebrow}</Text>
+        <Text style={styles.heroTitle}>{t.market.title}</Text>
+        <Text style={styles.heroText}>{t.market.description}</Text>
 
         <View style={styles.metricsRow}>
           {impactMetrics.map((metric) => (
@@ -27,7 +144,7 @@ export default function MarketScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>How the app works</Text>
+        <Text style={styles.sectionTitle}>{t.market.howItWorks}</Text>
         {buyerHighlights.map((highlight) => (
           <View key={highlight} style={styles.featureRow}>
             <View style={styles.featureIconWrap}>
@@ -40,8 +157,8 @@ export default function MarketScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Live product listings</Text>
-          <Text style={styles.sectionLink}>View all</Text>
+          <Text style={styles.sectionTitle}>{t.market.listings}</Text>
+          <Text style={styles.sectionLink}>{t.market.viewAll}</Text>
         </View>
 
         {products.map((product) => {
@@ -57,19 +174,19 @@ export default function MarketScreen() {
                   </Text>
                 </View>
                 <View style={styles.priceBadge}>
-                  <Text style={styles.priceBadgeText}>Save Rs {savings}</Text>
+                  <Text style={styles.priceBadgeText}>{t.market.save} Rs {savings}</Text>
                 </View>
               </View>
 
               <View style={styles.priceRow}>
                 <View>
-                  <Text style={styles.priceLabel}>Farmer price</Text>
+                  <Text style={styles.priceLabel}>{t.market.farmerPrice}</Text>
                   <Text style={styles.primaryPrice}>
                     Rs {product.price}/{product.unit}
                   </Text>
                 </View>
                 <View>
-                  <Text style={styles.priceLabel}>Market average</Text>
+                  <Text style={styles.priceLabel}>{t.market.marketAverage}</Text>
                   <Text style={styles.marketPrice}>
                     Rs {product.marketPrice}/{product.unit}
                   </Text>
@@ -94,23 +211,20 @@ export default function MarketScreen() {
       </View>
 
       <View style={styles.ctaCard}>
-        <Text style={styles.ctaTitle}>Built for social impact</Text>
-        <Text style={styles.ctaText}>
-          Every direct order helps farmers keep more of the sale price while giving buyers fresher,
-          more trustworthy produce.
-        </Text>
+        <Text style={styles.ctaTitle}>{t.market.impactTitle}</Text>
+        <Text style={styles.ctaText}>{t.market.impactText}</Text>
         <View style={styles.ctaRow}>
           <View style={styles.ctaPill}>
             <MaterialIcons name="storefront" size={16} color="#fff8ea" />
-            <Text style={styles.ctaPillText}>Farmer listing</Text>
+            <Text style={styles.ctaPillText}>{t.market.farmerListing}</Text>
           </View>
           <View style={styles.ctaPill}>
             <MaterialIcons name="shopping-bag" size={16} color="#fff8ea" />
-            <Text style={styles.ctaPillText}>Direct order</Text>
+            <Text style={styles.ctaPillText}>{t.market.directOrder}</Text>
           </View>
           <View style={styles.ctaPill}>
             <MaterialIcons name="compare-arrows" size={16} color="#fff8ea" />
-            <Text style={styles.ctaPillText}>Price compare</Text>
+            <Text style={styles.ctaPillText}>{t.market.priceCompare}</Text>
           </View>
         </View>
       </View>
