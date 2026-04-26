@@ -3,11 +3,11 @@
     "name": "FarmerMarketDirectApp",
     "slug": "FarmerMarketDirectApp",
     "version": "1.0.0",
+    "package": "com.farmermarket.app",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "farmermarketdirectapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.FarmerMarketDirectApp"
     },
     "web": {
       "output": "static",
@@ -41,8 +42,7 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }
