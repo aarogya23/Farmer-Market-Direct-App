@@ -1,17 +1,85 @@
-import { Link } from 'expo-router';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useLanguage } from '@/components/language-context';
+import { AuthService } from '@/services/authService';
+import { GoogleSignInButton } from '@/components/google-sign-in-button';
 
 export default function SignupScreen() {
+  const router = useRouter();
   const { t } = useLanguage();
+  const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+    if (!email.trim() || !password.trim()) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await AuthService.login({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      // Save token to AsyncStorage
+      await AsyncStorage.setItem('authToken', response.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response));
+
+      setLoading(false);
+      router.replace('/(tabs)/dashboard');
+    } catch {
+      setLoading(false);
+      setError('Credential not correct');
+    }
+  }
+
+  async function handleSignup() {
+    if (!fullName.trim() || !email.trim() || !password.trim()) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await AuthService.signup({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        password: password.trim(),
+        role: 'FARMER', // Default role, can be customized
+      });
+
+      // Save token to AsyncStorage
+      await AsyncStorage.setItem('authToken', response.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response));
+
+      setLoading(false);
+      router.replace('/(tabs)/dashboard');
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Signup failed. Please try again.');
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardWrap}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'android' ? 'padding' : undefined}>
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
@@ -24,39 +92,104 @@ export default function SignupScreen() {
           <View style={styles.titleBlock}>
             <Text style={styles.hello}>{t.signup.hello}</Text>
             <Text style={styles.title}>
-              <Text style={styles.titleAccent}>{t.signup.login}</Text> {t.signup.now}
+              <Text style={styles.titleAccent}>{isLogin ? t.signup.login : 'Create Account'}</Text> {isLogin ? t.signup.now : ''}
             </Text>
           </View>
 
           <View style={styles.formBlock}>
+            {!isLogin && (
+              <>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Full Name</Text>
+                </View>
+                <TextInput
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#c0c4bf"
+                  style={styles.input}
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="words"
+                />
+              </>
+            )}
+
             <View style={styles.labelRow}>
               <Text style={styles.label}>{t.signup.emailLabel}</Text>
             </View>
-            <TextInput placeholder={t.signup.emailPlaceholder} placeholderTextColor="#c0c4bf" style={styles.input} />
+            <TextInput
+              placeholder={t.signup.emailPlaceholder}
+              placeholderTextColor="#c0c4bf"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
 
             <View style={[styles.labelRow, styles.spacedRow]}>
               <Text style={styles.label}>{t.signup.passwordLabel}</Text>
-              <Text style={styles.secondaryText}>{t.signup.forgotPassword}</Text>
+              {isLogin && <Text style={styles.secondaryText}>{t.signup.forgotPassword}</Text>}
             </View>
-            <TextInput placeholder={t.signup.passwordPlaceholder} placeholderTextColor="#c0c4bf" secureTextEntry style={styles.input} />
+            <TextInput
+              placeholder={t.signup.passwordPlaceholder}
+              placeholderTextColor="#c0c4bf"
+              secureTextEntry
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+            />
 
-            <View style={styles.dividerRow}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>{t.signup.orWith}</Text>
-              <View style={styles.divider} />
-            </View>
-
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>{t.signup.phoneLabel}</Text>
-            </View>
-            <TextInput placeholder={t.signup.phonePlaceholder} placeholderTextColor="#c0c4bf" keyboardType="phone-pad" style={styles.input} />
+            {!isLogin && (
+              <>
+                <View style={[styles.labelRow, styles.spacedRow]}>
+                  <Text style={styles.label}>{t.signup.phoneLabel}</Text>
+                </View>
+                <TextInput
+                  placeholder={t.signup.phonePlaceholder}
+                  placeholderTextColor="#c0c4bf"
+                  keyboardType="phone-pad"
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+              </>
+            )}
           </View>
 
-          <Link href="/(tabs)" asChild>
-            <Pressable style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>{t.signup.signIn}</Text>
-            </Pressable>
-          </Link>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <Pressable 
+            style={[styles.primaryButton, loading && styles.buttonDisabled]} 
+            onPress={isLogin ? handleLogin : handleSignup}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {isLogin ? t.signup.signIn : 'Sign Up'}
+              </Text>
+            )}
+          </Pressable>
+
+          {isLogin && (
+            <>
+              <View style={styles.dividerRow}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.divider} />
+              </View>
+              <GoogleSignInButton 
+                buttonText="Continue with Google in Browser"
+                role="BUYER"
+              />
+            </>
+          )}
+
+          <Pressable onPress={() => setIsLogin(!isLogin)} style={styles.toggleButton}>
+            <Text style={styles.toggleText}>
+              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            </Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -72,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    minHeight: '100%',
+    flexGrow: 1,
     paddingHorizontal: 28,
     paddingTop: 24,
     paddingBottom: 54,
@@ -109,6 +242,25 @@ const styles = StyleSheet.create({
   },
   titleAccent: {
     color: '#3ccd7c',
+  },
+  demoCard: {
+    marginTop: 20,
+    borderRadius: 16,
+    padding: 14,
+    backgroundColor: '#eef7eb',
+    borderWidth: 1,
+    borderColor: '#d7ead3',
+    gap: 4,
+  },
+  demoTitle: {
+    color: '#214d2b',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  demoText: {
+    color: '#345239',
+    fontSize: 14,
+    fontWeight: '600',
   },
   formBlock: {
     marginTop: 34,
@@ -167,6 +319,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 26,
+  },
+  buttonDisabled: {
+    backgroundColor: '#a8d9b8',
+    opacity: 0.7,
+  },
+  errorText: {
+    marginTop: 16,
+    color: '#a63a2d',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  toggleButton: {
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  toggleText: {
+    color: '#3ccd7c',
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   primaryButtonText: {
     color: '#ffffff',

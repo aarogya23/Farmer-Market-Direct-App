@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbf9f1',
   },
   content: {
-    minHeight: '100%',
+    flexGrow: 1,
     paddingHorizontal: 28,
     paddingTop: 24,
     paddingBottom: 54,

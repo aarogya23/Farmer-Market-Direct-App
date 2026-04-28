@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbf9f1',
   },
   content: {
-    minHeight: '100%',
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 28,
