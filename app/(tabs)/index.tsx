@@ -1,5 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useLanguage } from '@/components/language-context';
 import * as marketData from '@/constants/market-data';
@@ -117,6 +118,7 @@ const fallbackProducts = {
 
 export default function MarketScreen() {
   const { language, t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const buyerHighlights =
     typeof marketData.getBuyerHighlights === 'function'
       ? marketData.getBuyerHighlights(language)
@@ -131,7 +133,16 @@ export default function MarketScreen() {
       : fallbackProducts[language];
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingTop: Math.max(insets.top, 12) + 8,
+          paddingBottom: 132 + Math.max(insets.bottom, 8),
+        },
+      ]}
+      showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
         <View style={styles.heroGlowOne} />
         <View style={styles.heroGlowTwo} />
@@ -143,7 +154,9 @@ export default function MarketScreen() {
           {impactMetrics.map((metric) => (
             <View key={metric.label} style={styles.metricCard}>
               <Text style={styles.metricValue}>{metric.value}</Text>
-              <Text style={styles.metricLabel}>{metric.label}</Text>
+              <Text style={styles.metricLabel} numberOfLines={3}>
+                {metric.label}
+              </Text>
             </View>
           ))}
         </View>
@@ -156,7 +169,9 @@ export default function MarketScreen() {
             <View style={styles.featureIconWrap}>
               <MaterialIcons name="check" size={18} color="#214d2b" />
             </View>
-            <Text style={styles.featureText}>{highlight}</Text>
+            <Text style={styles.featureText} numberOfLines={3}>
+              {highlight}
+            </Text>
           </View>
         ))}
       </View>
@@ -176,12 +191,14 @@ export default function MarketScreen() {
               <View style={styles.productHeader}>
                 <View>
                   <Text style={styles.productName}>{product.name}</Text>
-                  <Text style={styles.productMeta}>
+                  <Text style={styles.productMeta} numberOfLines={2}>
                     {product.farmer} {' - '} {product.location}
                   </Text>
                 </View>
                 <View style={styles.priceBadge}>
-                  <Text style={styles.priceBadgeText}>{t.market.save} Rs {savings}</Text>
+                  <Text style={styles.priceBadgeText} numberOfLines={1}>
+                    {t.market.save} Rs {savings}
+                  </Text>
                 </View>
               </View>
 
@@ -245,8 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f3e8',
   },
   content: {
-    padding: 20,
-    paddingBottom: 32,
+    paddingHorizontal: 20,
     gap: 18,
   },
   hero: {
@@ -278,36 +294,37 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: '#dbe8cf',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1.3,
+    letterSpacing: 1.1,
   },
   heroTitle: {
     color: '#fff8ea',
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 38,
     fontWeight: '800',
   },
   heroText: {
     color: '#dce7d4',
-    fontSize: 16,
-    lineHeight: 24,
-    maxWidth: 520,
+    fontSize: 15,
+    lineHeight: 23,
+    maxWidth: 510,
   },
   metricsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'stretch',
     gap: 12,
   },
   metricCard: {
-    minWidth: 96,
     flex: 1,
+    minWidth: 0,
     borderRadius: 18,
     padding: 14,
     backgroundColor: 'rgba(255, 248, 234, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(255, 248, 234, 0.16)',
+    minHeight: 150,
   },
   metricValue: {
     color: '#fff8ea',
@@ -316,8 +333,9 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     color: '#dce7d4',
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 6,
   },
   section: {
     gap: 12,
@@ -340,11 +358,12 @@ const styles = StyleSheet.create({
   },
   featureRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
     padding: 14,
     borderRadius: 18,
     backgroundColor: '#fffaf0',
+    minHeight: 78,
   },
   featureIconWrap: {
     width: 28,
@@ -391,15 +410,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   priceBadge: {
+    alignSelf: 'flex-start',
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: '#e6f3d8',
+    maxWidth: 112,
   },
   priceBadgeText: {
     color: '#295b30',
     fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
   },
   priceRow: {
     flexDirection: 'row',
