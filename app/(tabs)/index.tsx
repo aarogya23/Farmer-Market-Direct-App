@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useLanguage } from '@/components/language-context';
 import * as marketData from '@/constants/market-data';
@@ -43,6 +43,7 @@ const fallbackProducts = {
       stock: '42 crates ready',
       pickup: 'Next morning delivery',
       tags: ['Pesticide-free', 'Best seller'],
+      imageUri: 'https://images.unsplash.com/photo-1542831364-da5cf6c8d1f7?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'prod-2',
@@ -55,6 +56,7 @@ const fallbackProducts = {
       stock: '160 bundles',
       pickup: 'Same-day pickup',
       tags: ['Leafy greens', 'Restaurant favorite'],
+      imageUri: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'prod-3',
@@ -67,6 +69,7 @@ const fallbackProducts = {
       stock: '18 bags',
       pickup: '2-day transport',
       tags: ['Premium grain', 'High demand'],
+      imageUri: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&w=800&q=80',
     },
   ],
   ne: [
@@ -81,6 +84,7 @@ const fallbackProducts = {
       stock: '४२ क्रेट तयार',
       pickup: 'भोलि बिहान डेलिभरी',
       tags: ['बिषादीरहित', 'धेरै बिक्री हुने'],
+      imageUri: 'https://images.unsplash.com/photo-1542831364-da5cf6c8d1f7?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'prod-2',
@@ -93,6 +97,7 @@ const fallbackProducts = {
       stock: '१६० गाँठा',
       pickup: 'आजै पिकअप',
       tags: ['पातेदार तरकारी', 'रेस्टुरेन्टको रोजाइ'],
+      imageUri: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
     },
     {
       id: 'prod-3',
@@ -105,6 +110,7 @@ const fallbackProducts = {
       stock: '१८ बोर',
       pickup: '२ दिनमा ढुवानी',
       tags: ['प्रिमियम अन्न', 'उच्च माग'],
+      imageUri: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&w=800&q=80',
     },
   ],
 };
@@ -166,6 +172,7 @@ export default function MarketScreen() {
 
           return (
             <View key={product.id} style={styles.productCard}>
+              <Image source={{ uri: product.imageUri }} style={styles.productImage} />
               <View style={styles.productHeader}>
                 <View>
                   <Text style={styles.productName}>{product.name}</Text>
@@ -360,6 +367,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ebe4d3',
     gap: 14,
+  },
+  productImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 18,
+    marginBottom: 14,
   },
   productHeader: {
     flexDirection: 'row',

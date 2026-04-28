@@ -1,27 +1,92 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useLanguage } from '@/components/language-context';
 
-export default function ProfileScreen() {
-  const { language, t } = useLanguage();
+interface UserData {
+  token: string;
+  tokenType: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: string;
+}
 
-  const details =
-    language === 'ne'
-      ? [
-          { label: t.profile.farmerName, value: 'राम किसान' },
-          { label: t.profile.role, value: 'तरकारी उत्पादक' },
-          { label: t.profile.location, value: 'चितवन, नेपाल' },
-          { label: t.profile.phone, value: '+977 98XXXXXXXX' },
-          { label: t.profile.language, value: 'नेपाली / English' },
-        ]
-      : [
-          { label: t.profile.farmerName, value: 'Ram Farmer' },
-          { label: t.profile.role, value: 'Vegetable producer' },
-          { label: t.profile.location, value: 'Chitwan, Nepal' },
-          { label: t.profile.phone, value: '+977 98XXXXXXXX' },
-          { label: t.profile.language, value: 'Nepali / English' },
-        ];
+export default function ProfileScreen() {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        setUserData(JSON.parse(user));
+      }
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+        {
+          text: 'Logout',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('authToken');
+              await AsyncStorage.removeItem('user');
+              router.replace('/');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.screen, styles.centerContent]}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <View style={[styles.screen, styles.centerContent]}>
+        <Text style={styles.loadingText}>No user data found. Please login.</Text>
+        <Pressable
+          style={styles.loginButton}
+          onPress={() => router.replace('/signup')}>
+          <Text style={styles.loginButtonText}>Go to Login</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const details = [
+    { label: t.profile.farmerName, value: userData.fullName },
+    { label: 'Email', value: userData.email },
+    { label: t.profile.role, value: userData.role },
+  ];
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -29,8 +94,8 @@ export default function ProfileScreen() {
         <View style={styles.avatar}>
           <MaterialIcons name="person" size={34} color="#214d2b" />
         </View>
-        <Text style={styles.title}>{t.profile.title}</Text>
-        <Text style={styles.subtitle}>{t.profile.subtitle}</Text>
+        <Text style={styles.title}>{userData.fullName}</Text>
+        <Text style={styles.subtitle}>{userData.role}</Text>
       </View>
 
       <View style={styles.detailCard}>
@@ -43,14 +108,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.supportCard}>
-        <View style={styles.supportRow}>
+        <Pressable style={styles.supportRow}>
           <MaterialIcons name="support-agent" size={20} color="#214d2b" />
           <Text style={styles.supportText}>{t.profile.support}</Text>
-        </View>
-        <View style={styles.supportRow}>
+        </Pressable>
+        <Pressable style={styles.supportRow} onPress={handleLogout}>
           <MaterialIcons name="logout" size={20} color="#8b5234" />
           <Text style={[styles.supportText, styles.logoutText]}>{t.profile.logout}</Text>
-        </View>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -61,10 +126,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f6f3e8',
   },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   content: {
     padding: 20,
     paddingBottom: 32,
     gap: 18,
+  },
+  loadingText: {
+    color: '#17301f',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  loginButton: {
+    borderRadius: 14,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#214d2b',
+  },
+  loginButtonText: {
+    color: '#fff8ea',
+    fontSize: 16,
+    fontWeight: '700',
   },
   headerCard: {
     borderRadius: 28,
