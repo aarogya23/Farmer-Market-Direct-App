@@ -1,5 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,7 @@ export default function DashboardScreen() {
   const { t } = useLanguage();
   const [userData, setUserData] = useState<UserData | null>(null);
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -40,10 +42,14 @@ export default function DashboardScreen() {
   ];
 
   const actions = [
-    { label: t.dashboard.addProduct, icon: 'add-box' as const },
-    { label: t.dashboard.manageOrders, icon: 'receipt-long' as const },
-    { label: t.dashboard.weatherCenter, icon: 'cloud' as const },
-    { label: t.dashboard.priceWatch, icon: 'trending-up' as const },
+    {
+      label: t.dashboard.addProduct,
+      icon: 'add-box' as const,
+      onPress: () => router.push('../(tabs)/product' as any),
+    },
+    { label: t.dashboard.manageOrders, icon: 'receipt-long' as const, onPress: undefined },
+    { label: t.dashboard.weatherCenter, icon: 'cloud' as const, onPress: undefined },
+    { label: t.dashboard.priceWatch, icon: 'trending-up' as const, onPress: undefined },
   ];
 
   return (
@@ -85,10 +91,13 @@ export default function DashboardScreen() {
         <Text style={styles.sectionTitle}>{t.dashboard.quickActions}</Text>
         <View style={styles.actionGrid}>
           {actions.map((action) => (
-            <View key={action.label} style={styles.actionCard}>
+            <Pressable
+              key={action.label}
+              style={styles.actionCard}
+              onPress={action.onPress}>
               <MaterialIcons name={action.icon} size={24} color="#214d2b" />
               <Text style={styles.actionText}>{action.label}</Text>
-            </View>
+            </Pressable>
           ))}
         </View>
       </View>
