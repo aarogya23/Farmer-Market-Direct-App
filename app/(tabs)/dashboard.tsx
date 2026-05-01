@@ -1,11 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View, Pressable, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useLanguage } from '@/components/language-context';
+import { ProductService, Product } from '@/services/productService';
 
 interface UserData {
   fullName?: string;
@@ -15,23 +16,44 @@ interface UserData {
 export default function DashboardScreen() {
   const { t } = useLanguage();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const user = await AsyncStorage.getItem('user');
-        if (user) {
-          setUserData(JSON.parse(user));
-        }
-      } catch (error) {
-        console.error('Failed to load user data:', error);
+  const loadUserData = useCallback(async () => {
+    try {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        setUserData(JSON.parse(user));
       }
-    };
-
-    loadUserData();
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    }
   }, []);
+
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoadingProducts(true);
+      const data = await ProductService.getMyProducts();
+      setProducts(data.slice(0, 3)); // Show only first 3 products
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProducts();
+    }, [loadProducts])
+  );
 
   const firstName = userData?.fullName?.split(' ')[0] || 'Farmer';
 
@@ -47,9 +69,13 @@ export default function DashboardScreen() {
       icon: 'add-box' as const,
       onPress: () => router.push('../(tabs)/product' as any),
     },
+    {
+      label: 'My Products',
+      icon: 'store' as const,
+      onPress: () => router.push('../(tabs)/my-products' as any),
+    },
     { label: t.dashboard.manageOrders, icon: 'receipt-long' as const, onPress: undefined },
     { label: t.dashboard.weatherCenter, icon: 'cloud' as const, onPress: undefined },
-    { label: t.dashboard.priceWatch, icon: 'trending-up' as const, onPress: undefined },
   ];
 
   return (
@@ -100,6 +126,53 @@ export default function DashboardScreen() {
             </Pressable>
           ))}
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>My Recent Products</Text>
+          {products.length > 0 && (
+            <Pressable onPress={() => router.push('../(tabs)/my-products' as any)}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </Pressable>
+          )}
+        </View>
+        {loadingProducts ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#214d2b" />
+          </View>
+        ) : products.length === 0 ? (
+          <View style={styles.emptyProductCard}>
+            <MaterialIcons name="inventory-2" size={32} color="#9ccc65" />
+            <Text style={styles.emptyProductText}>No products added yet</Text>
+            <Text style={styles.emptyProductSubText}>Add your first product</Text>
+          </View>
+        ) : (
+          <View style={styles.productsContainer}>
+            {products.map((product) => (
+              <Pressable
+                key={product.id}
+                style={styles.productPreviewCard}
+                onPress={() => router.push('../(tabs)/my-products' as any)}>
+                <View style={styles.productPreviewHeader}>
+                  <Text style={styles.productPreviewName} numberOfLines={1}>
+                    {product.name}
+                  </Text>
+                  <Text style={styles.productPreviewPrice}>Rs {product.price}</Text>
+                </View>
+                <Text style={styles.productPreviewDesc} numberOfLines={1}>
+                  {product.description}
+                </Text>
+                <View style={styles.productPreviewFooter}>
+                  <Text style={styles.productPreviewQty}>Stock: {product.quantity}</Text>
+                  <View style={styles.productPreviewCategory}>
+                    <Text style={styles.productPreviewCategoryText}>{product.category}</Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -240,5 +313,91 @@ const styles = StyleSheet.create({
     color: '#304232',
     fontSize: 15,
     lineHeight: 22,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    color: '#214d2b',
+    fontSize: 13,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  emptyProductCard: {
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1,
+    borderColor: '#ebe4d3',
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyProductText: {
+    color: '#214d2b',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyProductSubText: {
+    color: '#666',
+    fontSize: 12,
+  },
+  productsContainer: {
+    gap: 10,
+  },
+  productPreviewCard: {
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1,
+    borderColor: '#ebe4d3',
+    gap: 8,
+  },
+  productPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  productPreviewName: {
+    flex: 1,
+    color: '#214d2b',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  productPreviewPrice: {
+    color: '#214d2b',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  productPreviewDesc: {
+    color: '#666',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  productPreviewFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  productPreviewQty: {
+    color: '#666',
+    fontSize: 11,
+  },
+  productPreviewCategory: {
+    backgroundColor: '#e8f5e9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  productPreviewCategoryText: {
+    color: '#214d2b',
+    fontSize: 10,
+    fontWeight: '600',
   },
 });
