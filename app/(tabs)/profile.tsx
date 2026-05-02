@@ -48,9 +48,8 @@ export default function ProfileScreen() {
           text: 'Logout',
           onPress: async () => {
             try {
-              await AsyncStorage.removeItem('authToken');
-              await AsyncStorage.removeItem('user');
-              router.replace('/');
+              await AsyncStorage.multiRemove(['authToken', 'user']);
+              router.replace('/signup');
             } catch (error) {
               Alert.alert('Error', 'Failed to logout. Please try again.');
             }

@@ -11,6 +11,7 @@ import { ProductService, Product } from '@/services/productService';
 interface UserData {
   fullName?: string;
   email?: string;
+  role?: string;
 }
 
 export default function DashboardScreen() {
@@ -56,6 +57,7 @@ export default function DashboardScreen() {
   );
 
   const firstName = userData?.fullName?.split(' ')[0] || 'Farmer';
+  const isAdmin = userData?.role === 'ADMIN';
 
   const stats = [
     { label: t.dashboard.todaySales, value: 'Rs 12,450', icon: 'payments' as const },
@@ -63,20 +65,35 @@ export default function DashboardScreen() {
     { label: t.dashboard.activeListings, value: '26', icon: 'inventory' as const },
   ];
 
-  const actions = [
-    {
-      label: t.dashboard.addProduct,
-      icon: 'add-box' as const,
-      onPress: () => router.push('../(tabs)/product' as any),
-    },
-    {
-      label: 'My Products',
-      icon: 'store' as const,
-      onPress: () => router.push('../(tabs)/my-products' as any),
-    },
-    { label: t.dashboard.manageOrders, icon: 'receipt-long' as const, onPress: undefined },
-    { label: t.dashboard.weatherCenter, icon: 'cloud' as const, onPress: undefined },
-  ];
+  const actions = isAdmin
+    ? [
+        {
+          label: 'Admin Products',
+          icon: 'admin-panel-settings' as const,
+          onPress: () => router.push('../(tabs)/admin-products' as any),
+        },
+        {
+          label: 'All Products',
+          icon: 'storefront' as const,
+          onPress: () => router.push('../(tabs)/admin-products' as any),
+        },
+        { label: t.dashboard.manageOrders, icon: 'receipt-long' as const, onPress: undefined },
+        { label: t.dashboard.weatherCenter, icon: 'cloud' as const, onPress: undefined },
+      ]
+    : [
+        {
+          label: t.dashboard.addProduct,
+          icon: 'add-box' as const,
+          onPress: () => router.push('../(tabs)/product' as any),
+        },
+        {
+          label: 'My Products',
+          icon: 'store' as const,
+          onPress: () => router.push('../(tabs)/my-products' as any),
+        },
+        { label: t.dashboard.manageOrders, icon: 'receipt-long' as const, onPress: undefined },
+        { label: t.dashboard.weatherCenter, icon: 'cloud' as const, onPress: undefined },
+      ];
 
   return (
     <ScrollView
