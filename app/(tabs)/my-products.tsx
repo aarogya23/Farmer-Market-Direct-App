@@ -4,10 +4,36 @@ import { ScrollView, StyleSheet, Text, View, Pressable, ActivityIndicator, Refre
 import { useEffect, useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/components/language-context';
+import { AppLanguage } from '@/constants/translations';
 import { ProductService, Product } from '@/services/productService';
 
+const PRODUCT_NAME_SUGGESTIONS = {
+  en: {
+    VEGETABLE: ['Tomato', 'Potato', 'Onion', 'Cabbage', 'Cauliflower', 'Green Beans', 'Carrots'],
+    FRUIT: ['Apple','Apples', 'Banana', 'Orange', 'Mango', 'Papaya', 'Strawberry', 'Grapes'],
+    DAIRY: ['Milk', 'Curd', 'Cheese', 'Paneer', 'Ghee', 'Yogurt', 'Butter'],
+    GRAIN: ['Rice', 'Wheat', 'Maize', 'Millet', 'Barley', 'Oats', 'Corn'],
+    MEAT: ['Chicken', 'Mutton', 'Fish', 'Buff Meat', 'Pork', 'Beef'],
+    OTHER: ['Honey', 'Mushroom', 'Eggs', 'Spices', 'Herbs', 'Nuts', 'Soybeans'],
+  },
+  ne: {
+    VEGETABLE: ['टमाटर', 'आलु', 'प्याज', 'बन्दा', 'काउली', 'सिमी', 'गाजर'],
+    FRUIT: ['स्याउ','स्याउ', 'केरा', 'सुन्तला', 'आँप', 'मेवा', 'स्ट्रबेरी', 'अंगुर'],
+    DAIRY: ['दूध', 'दही', 'चिज', 'पनिर', 'घ्यू', 'दही (योगर्ट)', 'माखन'],
+    GRAIN: ['चामल', 'गहुँ', 'मकै', 'कोदो', 'जौ', 'ओट्स', 'मकै दाना'],
+    MEAT: ['कुखुराको मासु', 'खसीको मासु', 'माछा', 'भैँसीको मासु', 'सुँगुरको मासु', 'गाईको मासु'],
+    OTHER: ['मह', 'च्याउ', 'अण्डा', 'मसला', 'जडीबुटी', 'सुकामेवा', 'सोयाबिन'],
+  },
+} as const satisfies Record<AppLanguage, Record<'VEGETABLE' | 'FRUIT' | 'DAIRY' | 'GRAIN' | 'MEAT' | 'OTHER', string[]>>;
+
+type CategoryType = keyof typeof PRODUCT_NAME_SUGGESTIONS.en;
+
+function normalizeValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
 export default function MyProductsScreen() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,6 +78,33 @@ export default function MyProductsScreen() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const getCategoryLabel = (value: string) => {
+    if (value in t.product.categories) {
+      return t.product.categories[value as CategoryType];
+    }
+
+    return value;
+  };
+
+  const getDisplayProductName = (name: string, productCategory: string) => {
+    if (language !== 'ne') {
+      return name;
+    }
+
+    if (!(productCategory in PRODUCT_NAME_SUGGESTIONS.en)) {
+      return name;
+    }
+
+    const categoryKey = productCategory as CategoryType;
+    const englishNames = PRODUCT_NAME_SUGGESTIONS.en[categoryKey];
+    const nepaliNames = PRODUCT_NAME_SUGGESTIONS.ne[categoryKey];
+    const matchedIndex = englishNames.findIndex(
+      (englishName) => normalizeValue(englishName) === normalizeValue(name)
+    );
+
+    return matchedIndex >= 0 ? nepaliNames[matchedIndex] : name;
+  };
+
   return (
     <ScrollView
       style={styles.screen}
@@ -59,7 +112,7 @@ export default function MyProductsScreen() {
         styles.content,
         {
           paddingTop: Math.max(insets.top, 12) + 8,
-          paddingBottom: 132 + Math.max(insets.bottom, 8),
+          paddingBottom: 28 + Math.max(insets.bottom, 8),
         },
       ]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
@@ -101,9 +154,9 @@ export default function MyProductsScreen() {
           {products.map((product) => (
             <View key={product.id} style={styles.productCard}>
               <View style={styles.productHeader}>
-                <Text style={styles.productName}>{product.name}</Text>
+                <Text style={styles.productName}>{getDisplayProductName(product.name, product.category)}</Text>
                 <View style={styles.categoryBadge}>
-                  <Text style={styles.categoryText}>{product.category}</Text>
+                  <Text style={styles.categoryText}>{getCategoryLabel(product.category)}</Text>
                 </View>
               </View>
 

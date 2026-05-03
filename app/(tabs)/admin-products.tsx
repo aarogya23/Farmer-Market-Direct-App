@@ -14,14 +14,116 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/components/language-context';
+import { AppLanguage } from '@/constants/translations';
 import { Product, ProductService } from '@/services/productService';
 
 const CATEGORY_OPTIONS = ['ALL', 'VEGETABLE', 'FRUIT', 'DAIRY', 'GRAIN', 'MEAT', 'OTHER'] as const;
 const SORT_OPTIONS = ['newest', 'oldest', 'price_asc', 'price_desc'] as const;
+type CategoryType = Exclude<(typeof CATEGORY_OPTIONS)[number], 'ALL'>;
+
+const PRODUCT_NAME_SUGGESTIONS: Record<AppLanguage, Record<CategoryType, string[]>> = {
+  en: {
+    VEGETABLE: ['Tomato', 'Potato', 'Onion', 'Cabbage', 'Cauliflower', 'Green Beans', 'Carrots'],
+    FRUIT: ['Apple', 'Banana', 'Orange', 'Mango', 'Papaya', 'Strawberry', 'Grapes'],
+    DAIRY: ['Milk', 'Curd', 'Cheese', 'Paneer', 'Ghee', 'Yogurt', 'Butter'],
+    GRAIN: ['Rice', 'Wheat', 'Maize', 'Millet', 'Barley', 'Oats', 'Corn'],
+    MEAT: ['Chicken','Goat', 'Mutton', 'Fish', 'Buff Meat', 'Pork', 'Beef'],
+    OTHER: ['Honey', 'Mushroom', 'Eggs', 'Spices', 'Herbs', 'Nuts', 'Soybeans'],
+  },
+  ne: {
+    VEGETABLE: ['टमाटर', 'आलु', 'प्याज', 'बन्दा', 'काउली', 'सिमी', 'गाजर'],
+    FRUIT: ['स्याउ', 'केरा', 'सुन्तला', 'आँप', 'मेवा', 'स्ट्रबेरी', 'अंगुर'],
+    DAIRY: ['दूध', 'दही', 'चिज', 'पनिर', 'घ्यू', 'दही (योगर्ट)', 'माखन'],
+    GRAIN: ['चामल', 'गहुँ', 'मकै', 'कोदो', 'जौ', 'ओट्स', 'मकै दाना'],
+    MEAT: ['कुखुराको मासु', 'खसीको मासु','खसीको मासु', 'माछा', 'भैँसीको मासु', 'सुँगुरको मासु', 'गाईको मासु'],
+    OTHER: ['मह', 'च्याउ', 'अण्डा', 'मसला', 'जडीबुटी', 'सुकामेवा', 'सोयाबिन'],
+  },
+};
+
+const ADMIN_COPY: Record<
+  AppLanguage,
+  {
+    title: string;
+    searchAndFilter: string;
+    searchPlaceholder: string;
+    minPrice: string;
+    maxPrice: string;
+    category: string;
+    sort: string;
+    apply: string;
+    reset: string;
+    allProducts: string;
+    items: string;
+    retry: string;
+    noProducts: string;
+    adjustFilters: string;
+    noDescription: string;
+    price: string;
+    quantity: string;
+    sortLabels: Record<(typeof SORT_OPTIONS)[number], string>;
+  }
+> = {
+  en: {
+    title: 'Admin Products List',
+    searchAndFilter: 'Search and Filter',
+    searchPlaceholder: 'Search by product name',
+    minPrice: 'Min price',
+    maxPrice: 'Max price',
+    category: 'Category',
+    sort: 'Sort',
+    apply: 'Apply',
+    reset: 'Reset',
+    allProducts: 'All Farmer Products',
+    items: 'items',
+    retry: 'Retry',
+    noProducts: 'No products found',
+    adjustFilters: 'Try another search or adjust filters.',
+    noDescription: 'No description',
+    price: 'Price',
+    quantity: 'Qty',
+    sortLabels: {
+      newest: 'Newest',
+      oldest: 'Oldest',
+      price_asc: 'Price Low to High',
+      price_desc: 'Price High to Low',
+    },
+  },
+  ne: {
+    title: 'व्यवस्थापन उत्पादन सूची',
+    searchAndFilter: 'खोज र फिल्टर',
+    searchPlaceholder: 'उत्पादन नामबाट खोज्नुहोस्',
+    minPrice: 'न्यूनतम मूल्य',
+    maxPrice: 'अधिकतम मूल्य',
+    category: 'श्रेणी',
+    sort: 'क्रमबद्ध',
+    apply: 'लागू गर्नुहोस्',
+    reset: 'रिसेट',
+    allProducts: 'सबै किसान उत्पादनहरू',
+    items: 'वटा',
+    retry: 'फेरि प्रयास गर्नुहोस्',
+    noProducts: 'कुनै उत्पादन फेला परेन',
+    adjustFilters: 'अर्को खोज गर्नुहोस् वा फिल्टर परिवर्तन गर्नुहोस्।',
+    noDescription: 'विवरण छैन',
+    price: 'मूल्य',
+    quantity: 'परिमाण',
+    sortLabels: {
+      newest: 'नयाँ पहिले',
+      oldest: 'पुरानो पहिले',
+      price_asc: 'कम मूल्यदेखि बढी',
+      price_desc: 'बढी मूल्यदेखि कम',
+    },
+  },
+};
+
+function normalizeValue(value: string) {
+  return value.trim().toLowerCase();
+}
 
 export default function AdminProductsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, language } = useLanguage();
   const [authorized, setAuthorized] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -33,6 +135,38 @@ export default function AdminProductsScreen() {
   const [maxPrice, setMaxPrice] = useState('');
   const [category, setCategory] = useState<(typeof CATEGORY_OPTIONS)[number]>('ALL');
   const [sort, setSort] = useState<(typeof SORT_OPTIONS)[number]>('newest');
+  const copy = ADMIN_COPY[language];
+
+  const getCategoryLabel = (value: string) => {
+    if (value === 'ALL') {
+      return language === 'ne' ? 'सबै' : 'ALL';
+    }
+
+    if (value in t.product.categories) {
+      return t.product.categories[value as CategoryType];
+    }
+
+    return value;
+  };
+
+  const getDisplayProductName = (name: string, productCategory: string) => {
+    if (language !== 'ne') {
+      return name;
+    }
+
+    if (!(productCategory in PRODUCT_NAME_SUGGESTIONS.en)) {
+      return name;
+    }
+
+    const categoryKey = productCategory as CategoryType;
+    const englishNames = PRODUCT_NAME_SUGGESTIONS.en[categoryKey];
+    const nepaliNames = PRODUCT_NAME_SUGGESTIONS.ne[categoryKey];
+    const matchedIndex = englishNames.findIndex(
+      (englishName) => normalizeValue(englishName) === normalizeValue(name)
+    );
+
+    return matchedIndex >= 0 ? nepaliNames[matchedIndex] : name;
+  };
 
   const loadProducts = useCallback(async () => {
     try {
@@ -117,7 +251,7 @@ export default function AdminProductsScreen() {
         styles.content,
         {
           paddingTop: Math.max(insets.top, 12) + 8,
-          paddingBottom: 132 + Math.max(insets.bottom, 8),
+          paddingBottom: 28 + Math.max(insets.bottom, 8),
         },
       ]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
@@ -125,15 +259,15 @@ export default function AdminProductsScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color="#214d2b" />
         </Pressable>
-        <Text style={styles.headerTitle}>Admin Products</Text>
+        <Text style={styles.headerTitle}>{copy.title}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.filterCard}>
-        <Text style={styles.sectionTitle}>Search and Filter</Text>
+        <Text style={styles.sectionTitle}>{copy.searchAndFilter}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Search by product name"
+          placeholder={copy.searchPlaceholder}
           placeholderTextColor="#9aa39a"
           value={query}
           onChangeText={setQuery}
@@ -141,7 +275,7 @@ export default function AdminProductsScreen() {
         <View style={styles.row}>
           <TextInput
             style={[styles.input, styles.halfInput]}
-            placeholder="Min price"
+            placeholder={copy.minPrice}
             placeholderTextColor="#9aa39a"
             keyboardType="numeric"
             value={minPrice}
@@ -149,7 +283,7 @@ export default function AdminProductsScreen() {
           />
           <TextInput
             style={[styles.input, styles.halfInput]}
-            placeholder="Max price"
+            placeholder={copy.maxPrice}
             placeholderTextColor="#9aa39a"
             keyboardType="numeric"
             value={maxPrice}
@@ -157,7 +291,7 @@ export default function AdminProductsScreen() {
           />
         </View>
 
-        <Text style={styles.filterLabel}>Category</Text>
+        <Text style={styles.filterLabel}>{copy.category}</Text>
         <View style={styles.chipRow}>
           {CATEGORY_OPTIONS.map((option) => (
             <Pressable
@@ -165,13 +299,13 @@ export default function AdminProductsScreen() {
               style={[styles.chip, category === option && styles.chipSelected]}
               onPress={() => setCategory(option)}>
               <Text style={[styles.chipText, category === option && styles.chipTextSelected]}>
-                {option}
+                {getCategoryLabel(option)}
               </Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={styles.filterLabel}>Sort</Text>
+        <Text style={styles.filterLabel}>{copy.sort}</Text>
         <View style={styles.chipRow}>
           {SORT_OPTIONS.map((option) => (
             <Pressable
@@ -179,7 +313,7 @@ export default function AdminProductsScreen() {
               style={[styles.chip, sort === option && styles.chipSelected]}
               onPress={() => setSort(option)}>
               <Text style={[styles.chipText, sort === option && styles.chipTextSelected]}>
-                {option}
+                {copy.sortLabels[option]}
               </Text>
             </Pressable>
           ))}
@@ -187,17 +321,17 @@ export default function AdminProductsScreen() {
 
         <View style={styles.actionRow}>
           <Pressable style={styles.primaryButton} onPress={loadProducts}>
-            <Text style={styles.primaryButtonText}>Apply</Text>
+            <Text style={styles.primaryButtonText}>{copy.apply}</Text>
           </Pressable>
           <Pressable style={styles.secondaryButton} onPress={resetFilters}>
-            <Text style={styles.secondaryButtonText}>Reset</Text>
+            <Text style={styles.secondaryButtonText}>{copy.reset}</Text>
           </Pressable>
         </View>
       </View>
 
       <View style={styles.resultsHeader}>
-        <Text style={styles.sectionTitle}>All Farmer Products</Text>
-        <Text style={styles.resultCount}>{products.length} items</Text>
+        <Text style={styles.sectionTitle}>{copy.allProducts}</Text>
+        <Text style={styles.resultCount}>{products.length} {copy.items}</Text>
       </View>
 
       {loading ? (
@@ -209,33 +343,33 @@ export default function AdminProductsScreen() {
           <MaterialIcons name="error-outline" size={46} color="#b83a2f" />
           <Text style={styles.errorText}>{error}</Text>
           <Pressable style={styles.primaryButton} onPress={loadProducts}>
-            <Text style={styles.primaryButtonText}>Retry</Text>
+            <Text style={styles.primaryButtonText}>{copy.retry}</Text>
           </Pressable>
         </View>
       ) : products.length === 0 ? (
         <View style={styles.centerContainer}>
           <MaterialIcons name="inventory-2" size={46} color="#9ccc65" />
-          <Text style={styles.emptyText}>No products found</Text>
-          <Text style={styles.emptySubText}>Try another search or adjust filters.</Text>
+          <Text style={styles.emptyText}>{copy.noProducts}</Text>
+          <Text style={styles.emptySubText}>{copy.adjustFilters}</Text>
         </View>
       ) : (
         <View style={styles.list}>
           {products.map((product) => (
             <View key={product.id} style={styles.productCard}>
               <View style={styles.productHeader}>
-                <Text style={styles.productName}>{product.name}</Text>
+                <Text style={styles.productName}>{getDisplayProductName(product.name, product.category)}</Text>
                 <View style={styles.categoryBadge}>
-                  <Text style={styles.categoryText}>{product.category}</Text>
+                  <Text style={styles.categoryText}>{getCategoryLabel(product.category)}</Text>
                 </View>
               </View>
 
               <Text style={styles.productDescription}>
-                {product.description || 'No description'}
+                {product.description || copy.noDescription}
               </Text>
 
               <View style={styles.metaRow}>
-                <Text style={styles.metaText}>Price: Rs {product.price}</Text>
-                <Text style={styles.metaText}>Qty: {product.quantity}</Text>
+                <Text style={styles.metaText}>{copy.price}: Rs {product.price}</Text>
+                <Text style={styles.metaText}>{copy.quantity}: {product.quantity}</Text>
               </View>
 
               <View style={styles.farmerCard}>

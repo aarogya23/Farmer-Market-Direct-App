@@ -12,7 +12,7 @@ interface UserData {
   userId: string;
   fullName: string;
   email: string;
-  role: string;
+  role: 'FARMER' | 'ADMIN' | 'BUYER' | string;
 }
 
 export default function ProfileScreen() {
@@ -81,10 +81,21 @@ export default function ProfileScreen() {
     );
   }
 
+  const normalizedRole =
+    userData.role === 'ADMIN' || userData.role === 'BUYER' || userData.role === 'FARMER'
+      ? userData.role
+      : 'FARMER';
+
+  const nameLabelByRole = {
+    FARMER: t.profile.farmerName,
+    ADMIN: t.profile.adminName,
+    BUYER: t.profile.buyerName,
+  } as const;
+
   const details = [
-    { label: t.profile.farmerName, value: userData.fullName },
+    { label: nameLabelByRole[normalizedRole], value: userData.fullName },
     { label: 'Email', value: userData.email },
-    { label: t.profile.role, value: userData.role },
+    { label: t.profile.role, value: t.profile.roleNames[normalizedRole] },
   ];
 
   return (
@@ -94,7 +105,7 @@ export default function ProfileScreen() {
           <MaterialIcons name="person" size={34} color="#214d2b" />
         </View>
         <Text style={styles.title}>{userData.fullName}</Text>
-        <Text style={styles.subtitle}>{userData.role}</Text>
+        <Text style={styles.subtitle}>{t.profile.roleNames[normalizedRole]}</Text>
       </View>
 
       <View style={styles.detailCard}>

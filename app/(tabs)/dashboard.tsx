@@ -102,7 +102,7 @@ export default function DashboardScreen() {
         styles.content,
         {
           paddingTop: Math.max(insets.top, 12) + 8,
-          paddingBottom: 132 + Math.max(insets.bottom, 8),
+          paddingBottom: 28 + Math.max(insets.bottom, 8),
         },
       ]}>
       <View style={styles.heroCard}>

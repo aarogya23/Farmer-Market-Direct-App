@@ -14,13 +14,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useLanguage } from '@/components/language-context';
 import { AppLanguage } from '@/constants/translations';
 
-const API_BASE_URL = 'http://10.229.64.184:8082';
+const API_BASE_URL = 'http://192.168.1.68:8082';
 const CATEGORY_OPTIONS = ['VEGETABLE', 'FRUIT', 'DAIRY', 'GRAIN', 'MEAT', 'OTHER'] as const;
 const PRICE_OPTIONS = ['50', '100', '150', '200', '250', '500'] as const;
 const QUANTITY_OPTIONS = ['5', '10', '25', '50', '100'] as const;
+
 type CategoryType = (typeof CATEGORY_OPTIONS)[number];
 type DropdownKey = 'category' | 'name' | 'price' | 'quantity';
 
@@ -153,7 +155,7 @@ export default function AddProductScreen() {
         name: name.trim(),
         price: parseFloat(numericPrice.toFixed(2)),
         quantity: numericQuantity,
-        category: category,
+        category,
         description: description.trim() || '',
       };
 

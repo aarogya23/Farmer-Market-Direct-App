@@ -33,7 +33,7 @@ export default function InsightsScreen() {
         styles.content,
         {
           paddingTop: Math.max(insets.top, 12) + 6,
-          paddingBottom: 132 + Math.max(insets.bottom, 8),
+          paddingBottom: 28 + Math.max(insets.bottom, 8),
         },
       ]}
       showsVerticalScrollIndicator={false}>
