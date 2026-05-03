@@ -9,7 +9,8 @@ import { AuthService } from '@/services/authService';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = '639860129650-blov3f5j9c86if893v6iahv80s1261eu.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '639860129650-blov3f5j9c86if893v6iahv80s1261eu.apps.googleusercontent.com';
+const GOOGLE_ANDROID_CLIENT_ID = '639860129650-i194uq7rtklb2mcdmelrvagk1ookniai.apps.googleusercontent.com';
 
 interface GoogleSignInButtonProps {
   onSuccess?: (url: string) => void;
@@ -28,9 +29,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   const router = useRouter();
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    webClientId: GOOGLE_CLIENT_ID,
-    androidClientId: GOOGLE_CLIENT_ID,
-    iosClientId: GOOGLE_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     scopes: ['profile', 'email'],
   });
 
@@ -38,7 +38,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     const idToken = response?.type === 'success' ? response.params?.id_token : undefined;
 
     if (idToken) {
-      handleGoogleResponse(idToken);
+      void handleGoogleResponse(idToken);
       return;
     }
 
@@ -51,7 +51,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       }
       setLoading(false);
     }
-  }, [response]);
+  }, [onError, response]);
 
   const handleGoogleResponse = async (idToken: string) => {
     try {
